@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Об авторе проекта{% endblock %}
+{% block content %}
+  <center>
+  <div class="team-clean">
+   <div class="container">
+       <div class="intro">
+           <h2 class="text-center"><br />Привет, я автор этого проекта, Дмитрий Венде.<br /><br /></h2>
+           <big class="text-center" ><br />Картинки, блоки, элементы бустрап. А может быть, просто напишу несколько абзацев текста. <br /><br /></big>
+       </div>
+       <div class="row people">
+           <div class="col-md-6 col-lg-4 offset-xl-4 item">
+            <center>
+            <img src= {% static "img/author.png" %}>
+               <h3 class="name" >Дмитрий Венде</h3>
+               <big class="title">Студент Яндекс Практикума <br /><br /></big> 
+               <big class="description">Мне 22 года. Родился и живу в Санкт-Петербурге. Сейчас учусь на 3 курсе океанолога и иду к тому чтобы стать backend-разработчиком.<br /><br /></big>
+           </div>
+       </div>
+   </div>
+</div>
+<p><a href="https://github.com/Vende1337"><img src= {% static "img/icon_github.png" %}></a> </p>
+<p> Ссылка на мой GitHub!!!<p/>
+    </center>
+{% endblock %} 
