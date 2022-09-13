@@ -61,12 +61,14 @@ def profile(request, username):
 
 def post_detail(request, post_id):
     form = PostForm(request.POST or None)
+    form_comment = CommentForm(request.POST or None)
     post = get_object_or_404(Post, id=post_id)
     comments = post.comments.all()
     context = {
         'post': post,
         'form': form,
-        'comments': comments
+        'comments': comments,
+        'form_comment': form_comment
     }
     return render(request, 'posts/post_detail.html', context)
 
@@ -111,8 +113,8 @@ def add_comment(request, post_id):
 
 @login_required
 def follow_index(request):
-    page_obj = Post.objects.select_related('author', 'group').filter(
-        author__following__user=request.user)
+    page_obj = get_page(Post.objects.select_related('author', 'group').filter(
+        author__following__user=request.user), request.GET.get('page'))
     context = {
         'page_obj': page_obj
     }
