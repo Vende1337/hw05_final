@@ -2,8 +2,6 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
-from django.db.models import Q
-
 
 
 from .models import Post, Group, User, Follow
@@ -40,8 +38,13 @@ def profile(request, username):
     author = get_object_or_404(User, username=username)
     page_obj = get_page(author.posts.select_related(
         'group'), request.GET.get('page'))
-    if request.user.is_authenticated is True and not (Follow.objects.filter(user=request.user, author=author)
-                                                      .exists() or request.user == author):
+    if request.user.is_authenticated is True and not (Follow.objects
+                                                      .filter(
+                                                          user=request.user,
+                                                          author=author
+                                                      )
+                                                      .exists() or request
+                                                      .user == author):
         following = False
     else:
         following = True
