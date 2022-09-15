@@ -8,7 +8,7 @@ from django.urls import reverse
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.conf import settings
-from ..models import Post, Group
+from ..models import Post, Group, Comment
 
 User = get_user_model()
 
@@ -44,6 +44,7 @@ class PostCreateFormTests(TestCase):
             self.assertEqual(post_object.group_id, group)
 
     def setUp(self):
+        self.guest_client = Client()
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
 
@@ -104,8 +105,7 @@ class PostCreateFormTests(TestCase):
         self.check_object(post_object, self.post.author,
                           form_data['text'], form_data['group'],)
 
-    def test_comment_form(self):
-        self.guest_client = Client()
+    def test_comment_form_guest(self):
         comment_count_before_form = self.post.comments.all().count()
         form_data = {
             'text': 'Текст комментария'
@@ -116,13 +116,25 @@ class PostCreateFormTests(TestCase):
                                data=form_data,
                                follow=True)
         comment_count_after_form = self.post.comments.all().count()
+
+        self.assertEqual(comment_count_after_form
+                         - comment_count_before_form, 0)
+
+    def test_comment_form_authorizated(self):
+
+        comment_before_form = set(Comment.objects.values_list('id', flat=True))
+        form_data = {
+            'text': 'Текст комментария'
+        }
         self.authorized_client.post(reverse('posts:add_comment',
                                             kwargs={'post_id':
                                                     self.post.id}),
                                     data=form_data,
                                     follow=True)
-        self.assertEqual(comment_count_after_form
-                         - comment_count_before_form, 0)
-
-        self.assertEqual(self.post.comments.all().count()
-                         - comment_count_before_form, 1)
+        comment_after_form = set(Comment.objects.values_list('id', flat=True))
+        comment_count = comment_after_form - comment_before_form
+        self.assertEqual(len(comment_count), 1)
+        comment_object = Comment.objects.get(id=comment_count.pop())
+        self.assertEqual(comment_object.text, form_data['text'])
+        self.assertEqual(comment_object.author, self.user)
+        self.assertEqual(comment_object.post_id, self.post.id)

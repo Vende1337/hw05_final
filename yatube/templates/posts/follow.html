@@ -6,7 +6,7 @@
 {% block content %}  
 {% include 'includes/switcher.html' %}
   <h1>Посты авторов на которых Вы подписаны.</h1>
-{% cache 20 'index_page' page_obj.number %}
+{% cache 20 index_page page_obj.number %}
 {% for post in page_obj %}
   {% include 'includes/article.html' %} 
     {% if not forloop.last %}<hr>{% endif %} 

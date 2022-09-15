@@ -128,58 +128,61 @@ class CacheTest(TestCase):
         cls.user = User.objects.create_user(username='author')
         cls.author_post = Client()
         cls.author_post.force_login(cls.user)
+        cls.post = Post.objects.create(
+            author=cls.user,
+            text='Тестовый текст',
+        )
 
     def test_cache_index(self):
         cache.clear()
-        post = Post.objects.create(
-            author=self.user,
-            text='Тестовый текст',
-        )
-        response_first = self.author_post.get(reverse('posts:index_path'))
-        self.assertIn(post.text, response_first.content.decode())
-        post.delete()
-        response_second = self.author_post.get(reverse('posts:index_path'))
-        self.assertIn(post.text, response_second.content.decode())
+        response_before_delete = self.author_post.get(
+            reverse('posts:index_path'))
+        self.assertIn(self.post.text, response_before_delete.content.decode())
+        self.post.delete()
+        response_after_delete = self.author_post.get(
+            reverse('posts:index_path'))
+        self.assertIn(self.post.text, response_after_delete.content.decode())
         cache.clear()
-        response_third = self.author_post.get(reverse('posts:index_path'))
-        self.assertNotIn(post.text, response_third.content.decode())
+        response_after_cache_clear = self.author_post.get(
+            reverse('posts:index_path'))
+        self.assertNotIn(
+            self.post.text, response_after_cache_clear.content.decode())
 
 
-class CommentTest(TestCase):
+class FollowTest(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.user_first = User.objects.create_user(username='author')
-        cls.user_second = User.objects.create_user(username='vasia')
-        cls.user_third = User.objects.create_user(username='sasha')
-
-    def setUp(self):
-        self.author_post = Client()
-        self.author_post.force_login(self.user_first)
-        self.follower_cleint = Client()
-        self.follower_cleint.force_login(self.user_second)
-        self.follower_second_cleint = Client()
-        self.follower_second_cleint.force_login(self.user_third)
-
-    def test_follow_unfollow(self):
-        self.author_post.get(reverse('posts:profile_follow', kwargs={
-                             'username': self.user_second}))
-        self.assertTrue(Follow.objects.filter(
-            user=self.user_first, author=self.user_second).exists())
-        self.author_post.get(reverse('posts:profile_unfollow', kwargs={
-                             'username': self.user_second}))
-        self.assertFalse(Follow.objects.filter(
-            user=self.user_first, author=self.user_second).exists())
-
-    def test_follow_page(self):
-        self.author_post.get(reverse('posts:profile_follow', kwargs={
-                             'username': self.user_second}))
-        post = Post.objects.create(
-            author=self.user_second,
+        cls.user_follower = User.objects.create_user(username='author')
+        cls.user_following = User.objects.create_user(username='vasia')
+        cls.post = Post.objects.create(
+            author=cls.user_following,
             text='Тестовый текст',
         )
-        response = self.author_post.get(reverse('posts:follow_index'))
-        self.assertIn(post, response.context['page_obj'])
-        response_second = self.follower_second_cleint.get(
+
+    def setUp(self):
+        self.follower_cleint = Client()
+        self.follower_cleint.force_login(self.user_follower)
+        self.following_cleint = Client()
+        self.following_cleint.force_login(self.user_following)
+
+    def test_follow(self):
+        self.follower_cleint.get(reverse('posts:profile_follow', kwargs={
+            'username': self.user_following}))
+        self.assertTrue(Follow.objects.filter(
+            user=self.user_follower, author=self.user_following).exists())
+
+    def test_unfollow(self):
+        self.follower_cleint.get(reverse('posts:profile_unfollow', kwargs={
+            'username': self.user_following}))
+        self.assertFalse(Follow.objects.filter(
+            user=self.user_follower, author=self.user_following).exists())
+
+    def test_follow_page(self):
+        self.follower_cleint.get(reverse('posts:profile_follow', kwargs={
+            'username': self.user_following}))
+        response = self.follower_cleint.get(reverse('posts:follow_index'))
+        self.assertIn(self.post, response.context['page_obj'])
+        response_second = self.following_cleint.get(
             reverse('posts:follow_index'))
-        self.assertNotIn(post, response_second.context['page_obj'])
+        self.assertNotIn(self.post, response_second.context['page_obj'])
