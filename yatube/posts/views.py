@@ -37,13 +37,10 @@ def profile(request, username):
     author = get_object_or_404(User, username=username)
     page_obj = get_page(author.posts.select_related(
         'group'), request.GET.get('page'))
-    following = request.user.is_authenticated and not (Follow.objects
-                                                       .filter(
-                                                           user=request.user,
-                                                           author=author
-                                                       )
-                                                       .exists() or request
-                                                       .user == author)
+    following = request.user.is_authenticated and not (
+        Follow.objects.filter(
+            user=request.user, author=author)
+        .exists() and request.user == User.following)
     context = {
         'author': author,
         'page_obj': page_obj,
@@ -53,7 +50,8 @@ def profile(request, username):
 
 
 def post_detail(request, post_id):
-    post = get_object_or_404(Post.objects.select_related('author'), id=post_id)
+    post = get_object_or_404(
+        Post.objects.select_related('author', 'group'), id=post_id)
     comments = post.comments.select_related('author')
     context = {
         'form': CommentForm(),
