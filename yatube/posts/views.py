@@ -3,7 +3,6 @@ from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
 
-
 from .models import Post, Group, User, Follow
 from .forms import PostForm, CommentForm
 
@@ -38,16 +37,13 @@ def profile(request, username):
     author = get_object_or_404(User, username=username)
     page_obj = get_page(author.posts.select_related(
         'group'), request.GET.get('page'))
-    if request.user.is_authenticated is True and not (Follow.objects
-                                                      .filter(
-                                                          user=request.user,
-                                                          author=author
-                                                      )
-                                                      .exists() or request
-                                                      .user == author):
-        following = False
-    else:
-        following = True
+    following = request.user.is_authenticated and not (Follow.objects
+                                                       .filter(
+                                                           user=request.user,
+                                                           author=author
+                                                       )
+                                                       .exists() or request
+                                                       .user == author)
     context = {
         'author': author,
         'page_obj': page_obj,
@@ -57,11 +53,10 @@ def profile(request, username):
 
 
 def post_detail(request, post_id):
-    post = get_object_or_404(Post.objects.select_related(), id=post_id)
+    post = get_object_or_404(Post.objects.select_related('author'), id=post_id)
     comments = post.comments.select_related('author')
-    form = CommentForm()
     context = {
-        'form': form,
+        'form': CommentForm(),
         'post': post,
         'comments': comments,
     }

@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.db import models
 
+
 User = get_user_model()
 
 
@@ -94,3 +95,15 @@ class Follow(models.Model):
                              related_name='follower')
     author = models.ForeignKey(User, on_delete=models.CASCADE,
                                related_name='following')
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                check=~models.Q(user=models.F('author')),
+                name='user_cannot_follow_yourself'
+            ),
+            models.UniqueConstraint(
+                fields=['user', 'author'],
+                name='nonunique_following_constraint'
+            )
+        ]

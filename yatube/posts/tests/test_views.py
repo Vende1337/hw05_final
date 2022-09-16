@@ -163,8 +163,6 @@ class FollowTest(TestCase):
     def setUp(self):
         self.follower_cleint = Client()
         self.follower_cleint.force_login(self.user_follower)
-        self.following_cleint = Client()
-        self.following_cleint.force_login(self.user_following)
 
     def test_follow(self):
         self.follower_cleint.get(reverse('posts:profile_follow', kwargs={
@@ -179,10 +177,12 @@ class FollowTest(TestCase):
             user=self.user_follower, author=self.user_following).exists())
 
     def test_follow_page(self):
-        self.follower_cleint.get(reverse('posts:profile_follow', kwargs={
-            'username': self.user_following}))
+        Follow.objects.create(author=self.user_following,
+                              user=self.user_follower)
         response = self.follower_cleint.get(reverse('posts:follow_index'))
         self.assertIn(self.post, response.context['page_obj'])
-        response_second = self.following_cleint.get(
+        self.follower_cleint.force_login(self.user_following)
+        response_second = self.follower_cleint.get(
             reverse('posts:follow_index'))
         self.assertNotIn(self.post, response_second.context['page_obj'])
+              
