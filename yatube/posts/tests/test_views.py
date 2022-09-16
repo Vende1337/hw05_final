@@ -185,4 +185,3 @@ class FollowTest(TestCase):
         response_second = self.follower_cleint.get(
             reverse('posts:follow_index'))
         self.assertNotIn(self.post, response_second.context['page_obj'])
-              
