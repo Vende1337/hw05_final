@@ -38,7 +38,9 @@ def profile(request, username):
     page_obj = get_page(author.posts.select_related(
         'group'), request.GET.get('page'))
     following = request.user.is_authenticated and not (
-        Follow.objects.filter(author__following__user=author)
+        Follow.objects.filter(
+            user__follower__author=request.user,
+            author__following__user=author)
         .exists() and request.user == author)
     context = {
         'author': author,
