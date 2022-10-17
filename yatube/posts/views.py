@@ -44,7 +44,7 @@ def profile(request, username):
         'page_obj': page_obj,
         'following': following
     }
-    return render(request, 'posts/profile.html/', context)
+    return render(request, 'posts/profile.html/', context)pip install django-debug-toolbar==3.2.4 
 
 
 def post_detail(request, post_id):
